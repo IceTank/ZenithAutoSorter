@@ -43,7 +43,6 @@ import static org.icetank.SortUtils.toStorageBlockPos;
 public class AutoSorterModule extends Module {
     public static final int PRIORITY = 9000;
     final Timer timer = Timers.tickTimer();
-    private BlockPos lastInteractedContainer = null;
 
     private PathingRequestFuture pathingRequestFuture = PathingRequestFuture.rejected;
     private RequestFuture inventoryRequestFuture = RequestFuture.rejected;
@@ -118,6 +117,9 @@ public class AutoSorterModule extends Module {
                 }
                 var containerType = ContainerTypeInfoRegistry.REGISTRY.get(openContainer.getType());
                 List<ItemStack> items = openContainer.getContents().subList(0, containerType.topSlots());
+                if (PLUGIN_CONFIG.sortModule.bigStacksFirst) {
+                    items = SortUtils.sortItemsByStackSizeDescending(items);
+                }
 
                 for (var item : items) {
                     if (item == EMPTY_STACK) continue;
@@ -146,7 +148,6 @@ public class AutoSorterModule extends Module {
                 }
             }
             case WalkToDropoff -> {
-                var openContainer = CACHE.getPlayerCache().getInventoryCache().getOpenContainer();
                 if (inventoryRequestFuture.isCompleted()) {
                     if (currentItem == null) {
                         state = SortState.Error;
@@ -194,7 +195,7 @@ public class AutoSorterModule extends Module {
         BlockPos pos = new BlockPos(packet.getX(), packet.getY(), packet.getZ());
         Block block = World.getBlock(pos);
         if (SortUtils.isContainer(block)) {
-            lastInteractedContainer = pos;
+            // Handle container interaction if needed
         }
     }
 

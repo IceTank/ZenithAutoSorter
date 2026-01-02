@@ -13,6 +13,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /*
@@ -88,5 +89,9 @@ public class SortUtils {
 
     public static Predicate<ItemStack> createItemStackPredicate(ItemData itemData) {
         return stack -> stack.getId() == itemData.id();
+    }
+
+    public static List<ItemStack> sortItemsByStackSizeDescending(List<ItemStack> items) {
+        return items.stream().filter(Objects::nonNull).sorted((a, b) -> Integer.compare(b.getAmount(), a.getAmount())).toList();
     }
 }

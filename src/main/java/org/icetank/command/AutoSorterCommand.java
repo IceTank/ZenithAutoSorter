@@ -127,6 +127,14 @@ public class AutoSorterCommand extends Command {
                                     .primaryColor();
                             return OK;
                         }))
+                        .then(literal("bigStacksFirst").then(argument("toggle", toggle())).executes(c -> {
+                            boolean toggle = getToggle(c, "toggle");
+                            PLUGIN_CONFIG.sortModule.bigStacksFirst = toggle;
+                            c.getSource().getEmbed()
+                                    .title("Big Stacks First " + toggleStrCaps(toggle))
+                                    .primaryColor();
+                            return OK;
+                        }))
                 );
     }
 
