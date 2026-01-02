@@ -1,8 +1,19 @@
-# ZenithProxy Example Plugin
+# ZenithProxy Auto Sorter Plugin
 
 [ZenithProxy](https://github.com/rfresh2/ZenithProxy) is a Minecraft proxy and bot.
 
-This repository is an example core plugin for ZenithProxy, allowing you to add custom modules and commands.
+This plugin adds item sorting functionality to ZenithProxy.
+The bot picks up items from a defined chest and sorts them into other chests based on user-defined item assignments.
+
+## Commands
+
+* `autoSorter <on|off>` - Enable or disable the Auto Sorter module
+    * `autoSorter sort add <item name>` - Assigns an item to sort to the chest you are looking at
+    * `autoSorter sort remove <item name>` - Removes an item from being sorted
+    * `autoSorter sort pickupLocation` - Sets the pickup location for items to sort to the chest you are looking at
+    * `autoSorter sort clear` - Clears all items to sort
+    * `autoSorter sort start` - Starts sorting items (you need to /swap or disconnect for the bot to be able to do anything)
+    * `autoSorter sort stop` - Stops sorting items
 
 ## Installing Plugins
 
