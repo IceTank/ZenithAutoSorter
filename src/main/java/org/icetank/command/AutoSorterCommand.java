@@ -135,6 +135,14 @@ public class AutoSorterCommand extends Command {
                                     .primaryColor();
                             return OK;
                         }))
+                        .then(literal("onlyFullStacks").then(argument("toggle", toggle())).executes(c -> {
+                            boolean toggle = getToggle(c, "toggle");
+                            PLUGIN_CONFIG.sortModule.onlyFullStacks = toggle;
+                            c.getSource().getEmbed()
+                                    .title("Only Full Stacks " + toggleStrCaps(toggle))
+                                    .primaryColor();
+                            return OK;
+                        }))
                 );
     }
 
@@ -144,6 +152,8 @@ public class AutoSorterCommand extends Command {
                 .primaryColor()
                 .addField("Enabled", toggleStr(PLUGIN_CONFIG.sortModule.enabled))
                 .addField("Pickup Location", PLUGIN_CONFIG.sortModule.pickupLocation == null ? "Not Set" : "Set")
-                .addField("Sort destinations", String.valueOf(PLUGIN_CONFIG.sortModule.sortDestinations.size()));
+                .addField("Sort destinations", String.valueOf(PLUGIN_CONFIG.sortModule.sortDestinations.size()))
+                .addField("Big Stacks First", toggleStr(PLUGIN_CONFIG.sortModule.bigStacksFirst))
+                .addField("Only Full Stacks", toggleStr(PLUGIN_CONFIG.sortModule.onlyFullStacks));
     }
 }

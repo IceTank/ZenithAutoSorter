@@ -21,5 +21,6 @@ public class AutoSorterConfig {
         public BlockPos pickupLocation = null;
         public Map<String, BlockPos> sortDestinations = new HashMap<>();
         public boolean bigStacksFirst = true;
+        public boolean onlyFullStacks = false;
     }
 }

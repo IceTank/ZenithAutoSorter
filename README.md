@@ -7,13 +7,14 @@ The bot picks up items from a defined chest and sorts them into other chests bas
 
 ## Commands
 
-* `autoSorter <on|off>` - Enable or disable the Auto Sorter module
+* `autoSorter <true|false>` - Enable or disable the Auto Sorter module
     * `autoSorter sort add <item name>` - Assigns an item to sort to the chest you are looking at
     * `autoSorter sort remove <item name>` - Removes an item from being sorted
     * `autoSorter sort pickupLocation` - Sets the pickup location for items to sort to the chest you are looking at
     * `autoSorter sort clear` - Clears all items to sort
     * `autoSorter sort start` - Starts sorting items (you need to /swap or disconnect for the bot to be able to do anything)
     * `autoSorter sort stop` - Stops sorting items
+    * `autoSorter sort onlyFullStacks <true|false>` - Only tack full stacks of items to sort
 
 ## Installing Plugins
 

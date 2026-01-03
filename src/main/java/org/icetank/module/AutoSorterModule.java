@@ -125,6 +125,9 @@ public class AutoSorterModule extends Module {
                     if (item == EMPTY_STACK) continue;
                     var itemData = ItemRegistry.REGISTRY.get(item.getId());
                     if (itemData == null) continue;
+
+                    if (PLUGIN_CONFIG.sortModule.onlyFullStacks && itemData.stackSize() != item.getAmount()) continue;
+
                     var blockPos = PLUGIN_CONFIG.sortModule.sortDestinations.get(itemData.name());
                     if (blockPos == null) continue;
 
