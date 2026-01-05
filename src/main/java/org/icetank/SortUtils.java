@@ -25,7 +25,13 @@ public class SortUtils {
 
     static {
         CONTAINER = List.of(
-                BlockRegistry.CHEST, BlockRegistry.TRAPPED_CHEST, BlockRegistry.BARREL
+                BlockRegistry.CHEST, BlockRegistry.TRAPPED_CHEST, BlockRegistry.BARREL,
+                BlockRegistry.WHITE_SHULKER_BOX, BlockRegistry.ORANGE_SHULKER_BOX, BlockRegistry.MAGENTA_SHULKER_BOX,
+                BlockRegistry.LIGHT_BLUE_SHULKER_BOX, BlockRegistry.YELLOW_SHULKER_BOX, BlockRegistry.LIME_SHULKER_BOX,
+                BlockRegistry.PINK_SHULKER_BOX, BlockRegistry.GRAY_SHULKER_BOX, BlockRegistry.LIGHT_GRAY_SHULKER_BOX,
+                BlockRegistry.CYAN_SHULKER_BOX, BlockRegistry.PURPLE_SHULKER_BOX, BlockRegistry.BLUE_SHULKER_BOX,
+                BlockRegistry.BROWN_SHULKER_BOX, BlockRegistry.GREEN_SHULKER_BOX, BlockRegistry.RED_SHULKER_BOX,
+                BlockRegistry.BLACK_SHULKER_BOX, BlockRegistry.SHULKER_BOX
         );
     }
 

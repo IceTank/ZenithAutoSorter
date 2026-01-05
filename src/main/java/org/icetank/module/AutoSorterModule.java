@@ -28,6 +28,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.icetank.AutoSorterPlugin;
 import org.icetank.SortUtils;
+import org.icetank.module.autokitmaker.AutoKitMaker;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -51,7 +52,7 @@ public class AutoSorterModule extends Module {
 
     @Override
     public boolean enabledSetting() {
-        return AutoSorterPlugin.PLUGIN_CONFIG.sortModule.enabled;
+        return AutoSorterPlugin.PLUGIN_CONFIG.autoSortModule.enabled;
     }
 
     @Override
@@ -85,19 +86,19 @@ public class AutoSorterModule extends Module {
     private void handleBotTick(ClientBotTick event) {
         switch (state) {
             case WalkToPickup -> {
-                if (PLUGIN_CONFIG.sortModule.pickupLocation == null) {
+                if (PLUGIN_CONFIG.autoSortModule.pickupLocation == null) {
                     state = SortState.Error;
                     LOG.error("No pickup location set for Auto Sorter.");
                     return;
-                } else if (PLUGIN_CONFIG.sortModule.pickupLocation.distance(BOT.blockPosition()) > 200) {
+                } else if (PLUGIN_CONFIG.autoSortModule.pickupLocation.distance(BOT.blockPosition()) > 200) {
                     state = SortState.Error;
                     LOG.error("Pickup location is too far away.");
                     return;
                 }
                 pathingRequestFuture = BARITONE.rightClickBlock(
-                        PLUGIN_CONFIG.sortModule.pickupLocation.x(),
-                        PLUGIN_CONFIG.sortModule.pickupLocation.y(),
-                        PLUGIN_CONFIG.sortModule.pickupLocation.z()
+                        PLUGIN_CONFIG.autoSortModule.pickupLocation.x(),
+                        PLUGIN_CONFIG.autoSortModule.pickupLocation.y(),
+                        PLUGIN_CONFIG.autoSortModule.pickupLocation.z()
                 );
                 pathingRequestFuture.addExecutedListener(f -> timer.reset());
                 state = SortState.OpenPickupContainer;
@@ -117,7 +118,7 @@ public class AutoSorterModule extends Module {
                 }
                 var containerType = ContainerTypeInfoRegistry.REGISTRY.get(openContainer.getType());
                 List<ItemStack> items = openContainer.getContents().subList(0, containerType.topSlots());
-                if (PLUGIN_CONFIG.sortModule.bigStacksFirst) {
+                if (PLUGIN_CONFIG.autoSortModule.bigStacksFirst) {
                     items = SortUtils.sortItemsByStackSizeDescending(items);
                 }
 
@@ -126,9 +127,9 @@ public class AutoSorterModule extends Module {
                     var itemData = ItemRegistry.REGISTRY.get(item.getId());
                     if (itemData == null) continue;
 
-                    if (PLUGIN_CONFIG.sortModule.onlyFullStacks && itemData.stackSize() != item.getAmount()) continue;
+                    if (PLUGIN_CONFIG.autoSortModule.onlyFullStacks && itemData.stackSize() != item.getAmount()) continue;
 
-                    var blockPos = PLUGIN_CONFIG.sortModule.sortDestinations.get(itemData.name());
+                    var blockPos = PLUGIN_CONFIG.autoSortModule.sortDestinations.get(itemData.name());
                     if (blockPos == null) continue;
 
                     Predicate<ItemStack> predicate = SortUtils.createItemStackPredicate(item);
@@ -158,7 +159,7 @@ public class AutoSorterModule extends Module {
                         return;
                     }
 
-                    var blockPos = PLUGIN_CONFIG.sortModule.sortDestinations.get(currentItem.name());
+                    var blockPos = PLUGIN_CONFIG.autoSortModule.sortDestinations.get(currentItem.name());
                     if (blockPos == null) {
                         state = SortState.Error;
                         LOG.error("No destination found for item: " + currentItem.name());
@@ -210,12 +211,12 @@ public class AutoSorterModule extends Module {
      * @return true if the item was added, false if it already exists or block is null
      */
     public boolean addItemToSortList(ItemData itemData, @Nullable BlockRaycastResult block) {
-        var value = PLUGIN_CONFIG.sortModule.sortDestinations.getOrDefault(itemData.name(), null);
+        var value = PLUGIN_CONFIG.autoSortModule.sortDestinations.getOrDefault(itemData.name(), null);
         if (value != null || block == null) {
             return false;
         }
         BlockPos pos = new BlockPos(block.x(), block.y(), block.z());
-        PLUGIN_CONFIG.sortModule.sortDestinations.put(itemData.name(), toStorageBlockPos(pos));
+        PLUGIN_CONFIG.autoSortModule.sortDestinations.put(itemData.name(), toStorageBlockPos(pos));
         return true;
     }
 
@@ -226,7 +227,7 @@ public class AutoSorterModule extends Module {
      * @return true if the item was removed, false if it was not found
      */
     public boolean removeItemFromSortList(ItemData itemData) {
-        return PLUGIN_CONFIG.sortModule.sortDestinations.remove(itemData.name()) != null;
+        return PLUGIN_CONFIG.autoSortModule.sortDestinations.remove(itemData.name()) != null;
     }
 
     public static class ServerboundUseItemOnPacketHandler implements PacketHandler<ServerboundUseItemOnPacket, ClientSession> {

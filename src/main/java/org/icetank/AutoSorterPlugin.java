@@ -4,7 +4,9 @@ import com.zenith.plugin.api.Plugin;
 import com.zenith.plugin.api.PluginAPI;
 import com.zenith.plugin.api.ZenithProxyPlugin;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import org.icetank.command.AutoKitMakerCommand;
 import org.icetank.command.AutoSorterCommand;
+import org.icetank.module.autokitmaker.AutoKitMaker;
 import org.icetank.module.AutoSorterModule;
 
 @Plugin(
@@ -24,11 +26,13 @@ public class AutoSorterPlugin implements ZenithProxyPlugin {
     @Override
     public void onLoad(PluginAPI pluginAPI) {
         LOG = pluginAPI.getLogger();
-        LOG.info("Example Plugin loading...");
+        LOG.info("Loading Zenith Auto Sorter Plugin v" + org.icetank.BuildConstants.VERSION);
         // initialize any configurations before modules or commands might need to read them
         PLUGIN_CONFIG = pluginAPI.registerConfig(org.icetank.BuildConstants.PLUGIN_ID, AutoSorterConfig.class);
         pluginAPI.registerModule(new AutoSorterModule());
+        pluginAPI.registerModule(new AutoKitMaker());
         pluginAPI.registerCommand(new AutoSorterCommand());
-        LOG.info("Example Plugin loaded!");
+        pluginAPI.registerCommand(new AutoKitMakerCommand());
+        LOG.info("Zenith Auto Sorter Plugin loaded successfully.");
     }
 }

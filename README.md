@@ -8,13 +8,25 @@ The bot picks up items from a defined chest and sorts them into other chests bas
 ## Commands
 
 * `autoSorter <true|false>` - Enable or disable the Auto Sorter module
-    * `autoSorter sort add <item name>` - Assigns an item to sort to the chest you are looking at
-    * `autoSorter sort remove <item name>` - Removes an item from being sorted
-    * `autoSorter sort pickupLocation` - Sets the pickup location for items to sort to the chest you are looking at
-    * `autoSorter sort clear` - Clears all items to sort
-    * `autoSorter sort start` - Starts sorting items (you need to /swap or disconnect for the bot to be able to do anything)
-    * `autoSorter sort stop` - Stops sorting items
-    * `autoSorter sort onlyFullStacks <true|false>` - Only tack full stacks of items to sort
+  * `add <item name>` - Assigns an item to sort to the chest you are looking at
+  * `remove <item name>` - Removes an item from being sorted
+  * `pickupLocation` - Sets the pickup location for items to sort to the chest you are looking at
+  * `clear` - Clears all items to sort
+  * `start` - Starts sorting items (you need to /swap or disconnect for the bot to be able to do anything)
+  * `stop` - Stops sorting items+
+  * `bigStacksFirst <true|false>` - Prioritize the largest stacks in the pickup chest first when sorting
+  * `onlyFullStacks <true|false>` - Ignore items in the pickup chest that are not full stacks
+* `autoKitMaker <true|false>` - Enable or disable the Auto Kit Maker module
+  * `start <kit name>` - Starts making kits of the given name (you need to /swap or disconnect for the bot to be able to do anything)
+  * `stop` - Stops making kits
+  * `itemLocations add <item name>` - Adds the chest you are looking at as an item source for kit making
+  * `itemLocations del <item name>` - Removes an item source for kit making
+  * `kitLocation` - Sets the output location for the kit items (i.e. shulker box location) to the chest/shulker box you are looking at
+  * `kit new <kit name>` - Creates a new kit with the given name
+  * `kit del <kit name>` - Deletes the kit with the given name
+  * `kit add <kit name> <slot> <item name>` - Adds an item to the kit in the given slot (1-27 for shulker box)
+  * `kit remove <kit name> <slot>` - Removes the item from the kit in the given slot
+  * `kit preview <kit name>` - Opens a fake shulker box showing the contents of the kit
 
 ## Installing Plugins
 
