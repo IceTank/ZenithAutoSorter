@@ -120,7 +120,7 @@ public class AutoKitMaker extends Module {
                 String itemName = currentKit.items().get(currentItemSlot);
                 if (itemName == null) {
                     currentState = State.Error;
-                    error("No item defined for slot " + currentItemSlot + " in kit " + currentKit.name());
+                    error("No item defined for slot " + currentItemSlot + " in kit '" + currentKit.name() + "'!");
                     return;
                 }
                 ItemData itemData = ItemRegistry.REGISTRY.get(itemName);
@@ -230,14 +230,14 @@ public class AutoKitMaker extends Module {
                 if (currentItemSlot != 1) {
                     // Check if the previous slot is filled
                     if (containerItems.get(currentItemSlot - 2) == null) {
-                        error("Previous slot " + (currentItemSlot - 2) + " is not filled in kit " + currentKit.name() + "!");
+                        error("Previous slot " + (currentItemSlot - 2) + " is not filled in kit '" + currentKit.name() + "'!");
                         currentState = State.Error;
                         return;
                     }
                     // Check if the previous slot has the wrong item
                     ItemData previousItemData = ItemRegistry.REGISTRY.get(currentKit.items().get(currentItemSlot - 1));
                     if (previousItemData == null || !previousItemData.name().equals(currentKit.items().get(currentItemSlot - 1))) {
-                        error("Previous slot " + (currentItemSlot - 1) + " has the wrong item in kit " + currentKit.name() + "!");
+                        error("Previous slot " + (currentItemSlot - 1) + " has the wrong item in kit '" + currentKit.name() + "'!");
                         currentState = State.Error;
                         return;
                     }
@@ -245,7 +245,7 @@ public class AutoKitMaker extends Module {
                 ItemStack currentItem = containerItems.get(currentItemSlot - 1);
                 if (currentItem != null) {
                     if (currentItem.getId() != currentItemData.id() || currentItem.getAmount() != currentItemData.stackSize()) {
-                        error("Current slot " + (currentItemSlot - 1) + " has the wrong item in kit " + currentKit.name() + "!");
+                        error("Current slot " + (currentItemSlot - 1) + " has the wrong item in kit '" + currentKit.name() + "'!");
                         currentState = State.Error;
                         return;
                     }
@@ -324,11 +324,11 @@ public class AutoKitMaker extends Module {
                     if (!actionDelay.tick(60, true)) {
                         return;
                     }
-                    info("Finished making kit " + currentKit.name() + ", making another one! [auto-repeat enabled]");
+                    info("Finished making kit '" + currentKit.name() + "', making another one! [auto-repeat enabled]");
                     startKit(currentKit);
                     return;
                 }
-                info("Finished making kit " + currentKit.name());
+                info("Finished making kit '" + currentKit.name() + "'!");
                 currentState = State.Idle;
                 currentKit = null;
             }
@@ -359,7 +359,7 @@ public class AutoKitMaker extends Module {
     }
 
     public void previewKit(Kit kit, ServerSession session) {
-        TextComponent component = Component.text("Kit: " + kit.name());
+        TextComponent component = Component.text(kit.name());
         int windowId = -2;
 
         session.sendAsync(new ClientboundOpenScreenPacket(
