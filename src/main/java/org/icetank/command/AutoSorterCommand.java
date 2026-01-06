@@ -19,7 +19,7 @@ import static com.zenith.command.brigadier.ItemArgument.item;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
 import static com.zenith.command.brigadier.ToggleArgumentType.toggle;
 import static org.icetank.AutoSorterPlugin.PLUGIN_CONFIG;
-import static org.icetank.SortUtils.isContainer;
+import static org.icetank.WorldUtils.isContainer;
 
 public class AutoSorterCommand extends Command {
     @Override

@@ -20,8 +20,9 @@ import java.util.function.Predicate;
  * @author IceTank
  * @since 02.01.2026
  */
-public class SortUtils {
+public class ModuleUtils {
     static final List<Block> CONTAINER;
+    static final List<Block> BUTTONS;
 
     static {
         CONTAINER = List.of(
@@ -32,6 +33,12 @@ public class SortUtils {
                 BlockRegistry.CYAN_SHULKER_BOX, BlockRegistry.PURPLE_SHULKER_BOX, BlockRegistry.BLUE_SHULKER_BOX,
                 BlockRegistry.BROWN_SHULKER_BOX, BlockRegistry.GREEN_SHULKER_BOX, BlockRegistry.RED_SHULKER_BOX,
                 BlockRegistry.BLACK_SHULKER_BOX, BlockRegistry.SHULKER_BOX
+        );
+        BUTTONS = List.of(
+                BlockRegistry.STONE_BUTTON, BlockRegistry.OAK_BUTTON, BlockRegistry.SPRUCE_BUTTON,
+                BlockRegistry.BIRCH_BUTTON, BlockRegistry.JUNGLE_BUTTON, BlockRegistry.ACACIA_BUTTON,
+                BlockRegistry.DARK_OAK_BUTTON, BlockRegistry.CRIMSON_BUTTON, BlockRegistry.WARPED_BUTTON,
+                BlockRegistry.POLISHED_BLACKSTONE_BUTTON
         );
     }
 
@@ -83,10 +90,6 @@ public class SortUtils {
             }
         }
         return pos; // Fallback to original position if no conditions match
-    }
-
-    public static boolean isContainer(Block block) {
-        return CONTAINER.contains(block);
     }
 
     public static Predicate<ItemStack> createItemStackPredicate(ItemStack item) {

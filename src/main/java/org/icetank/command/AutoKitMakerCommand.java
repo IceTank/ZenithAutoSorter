@@ -2,14 +2,12 @@ package org.icetank.command;
 
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.zenith.Proxy;
 import com.zenith.command.api.Command;
 import com.zenith.command.api.CommandContext;
 import com.zenith.command.api.CommandUsage;
-import com.zenith.feature.player.raycast.RaycastHelper;
 import com.zenith.mc.block.BlockPos;
 import com.zenith.mc.item.ItemData;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
+import org.icetank.WorldUtils;
 import org.icetank.module.autokitmaker.AutoKitMaker;
 import org.icetank.module.autokitmaker.Kit;
 
@@ -20,14 +18,14 @@ import static com.mojang.brigadier.arguments.IntegerArgumentType.getInteger;
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
-import static com.zenith.Globals.BOT;
 import static com.zenith.Globals.MODULE;
 import static com.zenith.command.brigadier.ItemArgument.getItem;
 import static com.zenith.command.brigadier.ItemArgument.item;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
 import static com.zenith.command.brigadier.ToggleArgumentType.toggle;
 import static org.icetank.AutoSorterPlugin.PLUGIN_CONFIG;
-import static org.icetank.SortUtils.isContainer;
+import static org.icetank.WorldUtils.isButton;
+import static org.icetank.WorldUtils.isContainer;
 
 /*
  * @author IceTank
@@ -44,12 +42,18 @@ public class AutoKitMakerCommand extends Command {
                         """)
                 .usageLines(
                         "on/off - Toggle the Auto Kit Maker Module",
+                        "start <kit name> - Start making the specified kit",
+                        "stop - Stop the current kit making process",
+                        "itemLocations add <item name> - Set the pickup location for the specified item",
+                        "itemLocations del <item name> - Remove the pickup location for the specified item",
+                        "kitLocation - Set the output shulker location",
+                        "kitDoneButton [clear] - Set the location of the button to press when a kit is done",
+                        "autoRepeat on/off - Toggle auto repeat of kit making",
                         "kit new <kit name> - Create a new kit",
                         "kit del <kit name> - Delete an existing kit",
                         "kit add <kit name> <slot> <item name> - Add an item to a kit at the specified slot",
-                        "kit preview <kit name> - Preview the specified kit",
-                        "start <kit name> - Start making the specified kit",
-                        "stop - Stop the current kit making process"
+                        "kit remove <kit name> <slot> - Remove the item from the specified slot in the kit",
+                        "kit preview <kit name> - Preview the specified kit"
                 )
                 .build();
     }
@@ -92,17 +96,10 @@ public class AutoKitMakerCommand extends Command {
                                         .title("Invalid item");
                                 return ERROR;
                             }
-                            if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
-                            var result = RaycastHelper.playerBlockOrEntityRaycast(BOT.getBlockReachDistance(), BOT.getEntityInteractDistance());
-                            if (!result.isBlock() || result.block() == null) {
+                            var result = WorldUtils.getBlockOrEntityRaycastResult();
+                            if (!result.isBlock() || result.block() == null || !isContainer(result.block().block())) {
                                 c.getSource().getEmbed()
-                                        .title("Not looking at a block");
-                                return ERROR;
-                            }
-                            if (!isContainer(result.block().block())) {
-                                c.getSource().getEmbed()
-                                        .title("Block is not a container")
-                                        .primaryColor();
+                                        .title("Not looking at a valid container block");
                                 return ERROR;
                             }
                             PLUGIN_CONFIG.autoKitMakeModule.itemLocations.put(itemData.name(), new BlockPos(result.block().x(), result.block().y(), result.block().z()));
@@ -111,25 +108,18 @@ public class AutoKitMakerCommand extends Command {
                                     .primaryColor();
                             return OK;
                         })))
-                        .then(literal("del").then(argument("itemName", item())).executes(c -> {
+                        .then(literal("del").then(argument("itemName", item()).executes(c -> {
                             ItemData itemData = getItem(c, "itemName");
                             PLUGIN_CONFIG.autoKitMakeModule.itemLocations.remove(itemData.name());
                             c.getSource().getEmbed()
                                     .title("Removed location for item '" + itemData.name() + "'");
                             return OK;
-                        })))
+                        }))))
                 .then(literal("kitLocation").executes(c -> {
-                    if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
-                    var result = RaycastHelper.playerBlockOrEntityRaycast(BOT.getBlockReachDistance(), BOT.getEntityInteractDistance());
-                    if (!result.isBlock() || result.block() == null) {
+                    var result = WorldUtils.getBlockOrEntityRaycastResult();
+                    if (!result.isBlock() || result.block() == null || !isContainer(result.block().block())) {
                         c.getSource().getEmbed()
-                                .title("Not looking at a block");
-                        return ERROR;
-                    }
-                    if (!isContainer(result.block().block())) {
-                        c.getSource().getEmbed()
-                                .title("Block is not a container")
-                                .primaryColor();
+                                .title("Not looking at a valid container block");
                         return ERROR;
                     }
                     PLUGIN_CONFIG.autoKitMakeModule.kitLocation = new BlockPos(result.block().x(), result.block().y(), result.block().z());
@@ -138,6 +128,34 @@ public class AutoKitMakerCommand extends Command {
                             .primaryColor();
                     return OK;
                 }))
+                .then(literal("kitDoneButton")
+                        .executes(c -> {
+                            var result = WorldUtils.getBlockOrEntityRaycastResult();
+                            if (!result.isBlock() || result.block() == null || !isButton(result.block().block())) {
+                                c.getSource().getEmbed()
+                                        .title("Not looking at a valid container block");
+                                return ERROR;
+                            }
+                            MODULE.get(AutoKitMaker.class).setKitDoneButtonLocation(new BlockPos(result.block().x(), result.block().y(), result.block().z()));
+                            c.getSource().getEmbed()
+                                    .title("Kit Done Button Location Set")
+                                    .primaryColor();
+                            return OK;
+                        })
+                        .then(literal("clear").executes(c -> {
+                            MODULE.get(AutoKitMaker.class).setKitDoneButtonLocation(null);
+                            c.getSource().getEmbed()
+                                    .title("Cleared Kit Done Button Location")
+                                    .primaryColor();
+                            return OK;
+                        })))
+                .then(literal("autoRepeat").then(argument("toggle", toggle()).executes(c -> {
+                    boolean enabled = getToggle(c, "toggle");
+                    PLUGIN_CONFIG.autoKitMakeModule.autoRepeat = enabled;
+                    c.getSource().getEmbed()
+                            .title("Auto Repeat " + (enabled ? "Enabled" : "Disabled"));
+                    return OK;
+                })))
                 .then(literal("kit")
                         .then(literal("new").then(argument("kitName", string()).executes(c -> {
                             String kitName = getString(c, "kitName");
@@ -151,7 +169,7 @@ public class AutoKitMakerCommand extends Command {
                                     .title("Added kit '" + kitName + "'");
                             return OK;
                         })))
-                        .then(literal("del").then(argument("kitName", string())).executes(c -> {
+                        .then(literal("del").then(argument("kitName", string()).executes(c -> {
                             String kitName = getString(c, "kitName");
                             if (!PLUGIN_CONFIG.autoKitMakeModule.kits.containsKey(kitName.toLowerCase())) {
                                 c.getSource().getEmbed()
@@ -162,7 +180,7 @@ public class AutoKitMakerCommand extends Command {
                             c.getSource().getEmbed()
                                     .title("Deleted kit '" + kitName + "'");
                             return OK;
-                        }))
+                        })))
                         .then(literal("add").then(argument("kitName", string()).then(argument("slot", integer()).then(argument("itemNAme", item()).executes(c -> {
                             String kitName = getString(c, "kitName");
                             int slot = getInteger(c, "slot");

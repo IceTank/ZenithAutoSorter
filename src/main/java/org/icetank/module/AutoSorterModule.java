@@ -27,8 +27,8 @@ import org.geysermc.mcprotocollib.protocol.data.ProtocolState;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.icetank.AutoSorterPlugin;
-import org.icetank.SortUtils;
-import org.icetank.module.autokitmaker.AutoKitMaker;
+import org.icetank.ModuleUtils;
+import org.icetank.WorldUtils;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
@@ -39,7 +39,7 @@ import static com.zenith.Globals.*;
 import static com.zenith.cache.data.inventory.Container.EMPTY_STACK;
 import static org.icetank.AutoSorterPlugin.LOG;
 import static org.icetank.AutoSorterPlugin.PLUGIN_CONFIG;
-import static org.icetank.SortUtils.toStorageBlockPos;
+import static org.icetank.ModuleUtils.toStorageBlockPos;
 
 public class AutoSorterModule extends Module {
     public static final int PRIORITY = 9000;
@@ -119,7 +119,7 @@ public class AutoSorterModule extends Module {
                 var containerType = ContainerTypeInfoRegistry.REGISTRY.get(openContainer.getType());
                 List<ItemStack> items = openContainer.getContents().subList(0, containerType.topSlots());
                 if (PLUGIN_CONFIG.autoSortModule.bigStacksFirst) {
-                    items = SortUtils.sortItemsByStackSizeDescending(items);
+                    items = ModuleUtils.sortItemsByStackSizeDescending(items);
                 }
 
                 for (var item : items) {
@@ -132,7 +132,7 @@ public class AutoSorterModule extends Module {
                     var blockPos = PLUGIN_CONFIG.autoSortModule.sortDestinations.get(itemData.name());
                     if (blockPos == null) continue;
 
-                    Predicate<ItemStack> predicate = SortUtils.createItemStackPredicate(item);
+                    Predicate<ItemStack> predicate = ModuleUtils.createItemStackPredicate(item);
                     var actions = Lists.newArrayList(
                             InventoryActionMacros.withdraw(
                                     openContainer.getContainerId(),
@@ -176,7 +176,7 @@ public class AutoSorterModule extends Module {
                     return;
                 }
 
-                Predicate<ItemStack> predicate = SortUtils.createItemStackPredicate(currentItem);
+                Predicate<ItemStack> predicate = ModuleUtils.createItemStackPredicate(currentItem);
                 var actions = Lists.newArrayList(
                         InventoryActionMacros.deposit(
                                 openContainer.getContainerId(),
@@ -198,7 +198,7 @@ public class AutoSorterModule extends Module {
     private void onUseItemOnBlock(ServerboundUseItemOnPacket packet) {
         BlockPos pos = new BlockPos(packet.getX(), packet.getY(), packet.getZ());
         Block block = World.getBlock(pos);
-        if (SortUtils.isContainer(block)) {
+        if (WorldUtils.isContainer(block)) {
             // Handle container interaction if needed
         }
     }

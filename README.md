@@ -27,6 +27,8 @@ The bot picks up items from a defined chest and sorts them into other chests bas
   * `kit add <kit name> <slot> <item name>` - Adds an item to the kit in the given slot (1-27 for shulker box)
   * `kit remove <kit name> <slot>` - Removes the item from the kit in the given slot
   * `kit preview <kit name>` - Opens a fake shulker box showing the contents of the kit
+  * `kitDoneButton [clear]` - Optional button to press after a kit is made. Won't do anything if not defined. Run with `clear` to clear.
+  * `autoRepeat <true|false>` - Whether to automatically repeat making the same kit or stop after one kit is made
 
 ## Installing Plugins
 
