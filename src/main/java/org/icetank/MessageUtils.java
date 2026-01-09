@@ -32,16 +32,12 @@ public class MessageUtils {
     }
 
     public static void broadcastMessage(Component message) {
-        Proxy.getInstance().getActiveConnections().forEach(connection -> {
-            connection.sendAsyncMessage(message);
-        });
+        Proxy.getInstance().getActiveConnections().forEach(connection -> connection.sendAsyncMessage(message));
     }
 
     public static void broadcastMessage(Component message, boolean overlay) {
         if (overlay) {
-            Proxy.getInstance().getActiveConnections().forEach(connection -> {
-                connection.sendAsync(new ClientboundSystemChatPacket(message, true));
-            });
+            Proxy.getInstance().getActiveConnections().forEach(connection -> connection.sendAsync(new ClientboundSystemChatPacket(message, true)));
         } else {
             broadcastMessage(message);
         }
