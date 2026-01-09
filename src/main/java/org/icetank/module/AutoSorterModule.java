@@ -31,6 +31,7 @@ import org.icetank.ModuleUtils;
 import org.icetank.WorldUtils;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -73,9 +74,12 @@ public class AutoSorterModule extends Module {
                 .build();
     }
 
-    public void startSorting() {
-        state = SortState.WalkToPickup;
-        LOG.info("Started Auto Sorter.");
+    public void start() {
+        if (PLUGIN_CONFIG.autoSortModule.pickupChest != null) {
+            state = SortState.WalkToPickupChest;
+        } else {
+            state = SortState.WalkToPickupPlayerLocation;
+        }
     }
 
     public void stopSorting() {
@@ -85,20 +89,66 @@ public class AutoSorterModule extends Module {
 
     private void handleBotTick(ClientBotTick event) {
         switch (state) {
-            case WalkToPickup -> {
-                if (PLUGIN_CONFIG.autoSortModule.pickupLocation == null) {
+            case WalkToPickupPlayerLocation -> {
+                BlockPos pickupPos = PLUGIN_CONFIG.autoSortModule.pickupPlayerLocation;
+                if (pickupPos == null) {
+                    state = SortState.Error;
+                    LOG.error("No player pickup location set for Auto Sorter.");
+                    return;
+                }
+                if (pickupPos.distance(BOT.blockPosition()) > 200) {
+                    state = SortState.Error;
+                    LOG.error("Player pickup location is too far away.");
+                    return;
+                }
+                if (pickupPos.equals(BOT.blockPosition())) {
+                    state = SortState.CheckInventoryForItemsToSort;
+                    return;
+                }
+                pathingRequestFuture = BARITONE.pathTo(pickupPos.x(), pickupPos.y(), pickupPos.z());
+                pathingRequestFuture.addExecutedListener(f -> timer.reset());
+                state = SortState.WalkToPickupPlayerLocationWait;
+            }
+            case WalkToPickupPlayerLocationWait -> {
+                if (pathingRequestFuture.isCompleted()) {
+                    state = SortState.CheckInventoryForItemsToSort;
+                }
+            }
+            case CheckInventoryForItemsToSort -> {
+                List<ItemStack> inventoryItems = CACHE.getPlayerCache().getPlayerInventory();
+                if (PLUGIN_CONFIG.autoSortModule.bigStacksFirst) {
+                    inventoryItems = ModuleUtils.sortItemsByStackSizeDescending(new ArrayList<>(inventoryItems));
+                }
+                for (var item : inventoryItems) {
+                    if (item == EMPTY_STACK) continue;
+
+                    var blockPos = getItemSortDestination(item);
+                    if (blockPos == null) continue;
+
+                    var itemData = ItemRegistry.REGISTRY.get(item.getId());
+                    if (itemData == null) continue;
+
+                    if (PLUGIN_CONFIG.autoSortModule.onlyFullStacks && itemData.stackSize() != item.getAmount()) continue;
+
+                    state = SortState.WalkToDropoff;
+                    currentItem = itemData;
+                    return;
+                }
+            }
+            case WalkToPickupChest -> {
+                if (PLUGIN_CONFIG.autoSortModule.pickupChest == null) {
                     state = SortState.Error;
                     LOG.error("No pickup location set for Auto Sorter.");
                     return;
-                } else if (PLUGIN_CONFIG.autoSortModule.pickupLocation.distance(BOT.blockPosition()) > 200) {
+                } else if (PLUGIN_CONFIG.autoSortModule.pickupChest.distance(BOT.blockPosition()) > 200) {
                     state = SortState.Error;
                     LOG.error("Pickup location is too far away.");
                     return;
                 }
                 pathingRequestFuture = BARITONE.rightClickBlock(
-                        PLUGIN_CONFIG.autoSortModule.pickupLocation.x(),
-                        PLUGIN_CONFIG.autoSortModule.pickupLocation.y(),
-                        PLUGIN_CONFIG.autoSortModule.pickupLocation.z()
+                        PLUGIN_CONFIG.autoSortModule.pickupChest.x(),
+                        PLUGIN_CONFIG.autoSortModule.pickupChest.y(),
+                        PLUGIN_CONFIG.autoSortModule.pickupChest.z()
                 );
                 pathingRequestFuture.addExecutedListener(f -> timer.reset());
                 state = SortState.OpenPickupContainer;
@@ -124,13 +174,13 @@ public class AutoSorterModule extends Module {
 
                 for (var item : items) {
                     if (item == EMPTY_STACK) continue;
+                    BlockPos blockPos = getItemSortDestination(item);
+                    if (blockPos == null) continue;
+
                     var itemData = ItemRegistry.REGISTRY.get(item.getId());
                     if (itemData == null) continue;
 
                     if (PLUGIN_CONFIG.autoSortModule.onlyFullStacks && itemData.stackSize() != item.getAmount()) continue;
-
-                    var blockPos = PLUGIN_CONFIG.autoSortModule.sortDestinations.get(itemData.name());
-                    if (blockPos == null) continue;
 
                     Predicate<ItemStack> predicate = ModuleUtils.createItemStackPredicate(item);
                     var actions = Lists.newArrayList(
@@ -190,7 +240,7 @@ public class AutoSorterModule extends Module {
                         .build());
 
                 currentItem = null;
-                state = SortState.WalkToPickup;
+                state = SortState.WalkToPickupChest;
             }
         }
     }
@@ -201,6 +251,20 @@ public class AutoSorterModule extends Module {
         if (WorldUtils.isContainer(block)) {
             // Handle container interaction if needed
         }
+    }
+
+    @Nullable
+    private BlockPos getItemSortDestination(ItemStack stack) {
+        var itemData = ItemRegistry.REGISTRY.get(stack.getId());
+        if (itemData == null) {
+            return null;
+        }
+        return getItemSortDestination(itemData);
+    }
+
+    @Nullable
+    private BlockPos getItemSortDestination(ItemData itemData) {
+        return PLUGIN_CONFIG.autoSortModule.sortDestinations.getOrDefault(itemData.name(), null);
     }
 
     /**
@@ -248,7 +312,10 @@ public class AutoSorterModule extends Module {
         Error,
         Idle,
 
-        WalkToPickup,
+        WalkToPickupPlayerLocation,
+        WalkToPickupPlayerLocationWait,
+        CheckInventoryForItemsToSort,
+        WalkToPickupChest,
         OpenPickupContainer,
         PickUpItem,
         WalkToDropoff,

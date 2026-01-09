@@ -10,7 +10,8 @@ The bot picks up items from a defined chest and sorts them into other chests bas
 * `autoSorter <true|false>` - Enable or disable the Auto Sorter module
   * `add <item name>` - Assigns an item to sort to the chest you are looking at
   * `remove <item name>` - Removes an item from being sorted
-  * `pickupLocation` - Sets the pickup location for items to sort to the chest you are looking at
+  * `pickupChest [clear]` - Clears or sets the pickup chest to the chest you are looking at
+  * `pickupPlayerLocation [clear]` - Clears or sets the pickup player location to your current location. Ignored if pickup chest is set.
   * `clear` - Clears all items to sort
   * `start` - Starts sorting items (you need to /swap or disconnect for the bot to be able to do anything)
   * `stop` - Stops sorting items+

@@ -19,7 +19,8 @@ public class AutoSorterConfig {
     public static class AutoSortModuleConfig {
         public boolean enabled = true;
         @Nullable
-        public BlockPos pickupLocation = null;
+        public BlockPos pickupChest = null;
+        public BlockPos pickupPlayerLocation = null;
         public Map<String, BlockPos> sortDestinations = new HashMap<>();
         public boolean bigStacksFirst = true;
         public boolean onlyFullStacks = false;

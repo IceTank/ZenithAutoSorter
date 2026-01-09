@@ -12,8 +12,7 @@ import com.zenith.mc.block.BlockPos;
 import com.zenith.mc.item.ItemData;
 import org.icetank.module.AutoSorterModule;
 
-import static com.zenith.Globals.BOT;
-import static com.zenith.Globals.MODULE;
+import static com.zenith.Globals.*;
 import static com.zenith.command.brigadier.ItemArgument.getItem;
 import static com.zenith.command.brigadier.ItemArgument.item;
 import static com.zenith.command.brigadier.ToggleArgumentType.getToggle;
@@ -32,6 +31,13 @@ public class AutoSorterCommand extends Command {
                         """)
                 .usageLines(
                         "on/off - Toggle the Auto Sorter Module",
+                        "pickupChest [clear] - Set or clear the pickup chest location",
+                        "pickupPlayerLocation [clear] - Set or clear the pickup player location",
+                        "add [item name] - Add an item to the Auto Sorter list with the container you're looking at as the destination",
+                        "remove [item name] - Remove an item from the Auto Sorter list",
+                        "clear - Clear the Auto Sorter list",
+                        "bigStacksFirst [on/off] - Toggle whether to sort big stacks first",
+                        "onlyFullStacks [on/off] - Toggle whether to only sort full stacks",
                         "sort [add/remove/pickupLocation/clear] [item name] - Add or remove an item from the Auto Sorter list",
                         "sort <start/stop> - Start or stop sorting items"
                 )
@@ -50,7 +56,7 @@ public class AutoSorterCommand extends Command {
                             // other properties like fields can be left unset without issues
                             .title("Auto Sorter " + toggleStrCaps(PLUGIN_CONFIG.autoSortModule.enabled));
                 }))
-                .then(literal("pickupLocation").executes(c -> {
+                .then(literal("pickupChest").executes(c -> {
                     if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
                     var result = RaycastHelper.playerBlockOrEntityRaycast(BOT.getBlockReachDistance(), BOT.getEntityInteractDistance());
                     if (!result.isBlock() || result.block() == null) {
@@ -64,47 +70,66 @@ public class AutoSorterCommand extends Command {
                                 .primaryColor();
                         return ERROR;
                     }
-                    PLUGIN_CONFIG.autoSortModule.pickupLocation = new BlockPos(result.block().x(), result.block().y(), result.block().z());
+                    PLUGIN_CONFIG.autoSortModule.pickupChest = new BlockPos(result.block().x(), result.block().y(), result.block().z());
                     c.getSource().getEmbed()
                             .title("Pickup Location Set")
                             .primaryColor();
                     return OK;
-                }))
-                .then(literal("add")
-                        .then(argument("item", item()).executes(c -> {
-                            ItemData itemData = getItem(c, "item");
-                            String itemName = itemData.name();
-                            if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
-                            var result = RaycastHelper.playerBlockOrEntityRaycast(BOT.getBlockReachDistance(), BOT.getEntityInteractDistance());
-                            if (!result.isBlock() || result.block() == null) {
-                                c.getSource().getEmbed()
-                                        .title("Not looking at a block");
-                                return ERROR;
-                            }
-                            if (!isContainer(result.block().block())) {
-                                c.getSource().getEmbed()
-                                        .title("Block is not a container")
-                                        .primaryColor();
-                                return ERROR;
-                            }
-                            boolean added = MODULE.get(AutoSorterModule.class).addItemToSortList(itemData, result.block());
-                            c.getSource().getEmbed()
-                                    .title(added ? "Item Added" : "Item Already Exists")
-                                    .primaryColor()
-                                    .addField("Item", itemName);
-                            return OK;
-                        })))
-                .then(literal("remove")
-                        .then(argument("item", item()).executes(c -> {
-                            ItemData itemData = getItem(c, "item");
-                            String itemName = itemData.name();
-                            boolean removed = MODULE.get(AutoSorterModule.class).removeItemFromSortList(itemData);
-                            c.getSource().getEmbed()
-                                    .title(removed ? "Item Removed" : "Item Not Found")
-                                    .primaryColor()
-                                    .addField("Item", itemName);
-                            return 0;
-                        })))
+                }).then(literal("clear").executes(c -> {
+                    PLUGIN_CONFIG.autoSortModule.pickupChest = null;
+                    c.getSource().getEmbed()
+                            .title("Pickup Location Cleared")
+                            .primaryColor();
+                    return OK;
+                })))
+                .then(literal("pickupPlayerLocation").executes(c -> {
+                    if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
+                    var playerPos = CACHE.getPlayerCache().getThePlayer().blockPos();
+                    PLUGIN_CONFIG.autoSortModule.pickupPlayerLocation = new BlockPos(playerPos.x(), playerPos.y(), playerPos.z());
+                    c.getSource().getEmbed()
+                            .title("Pickup Player Location Set")
+                            .primaryColor();
+                    return OK;
+                }).then(literal("clear").executes(c -> {
+                    PLUGIN_CONFIG.autoSortModule.pickupPlayerLocation = null;
+                    c.getSource().getEmbed()
+                            .title("Pickup Player Location Cleared")
+                            .primaryColor();
+                    return OK;
+                })))
+                .then(literal("add").then(argument("item", item()).executes(c -> {
+                    ItemData itemData = getItem(c, "item");
+                    String itemName = itemData.name();
+                    if (Proxy.getInstance().hasActivePlayer()) BOT.syncFromCache(true);
+                    var result = RaycastHelper.playerBlockOrEntityRaycast(BOT.getBlockReachDistance(), BOT.getEntityInteractDistance());
+                    if (!result.isBlock() || result.block() == null) {
+                        c.getSource().getEmbed()
+                                .title("Not looking at a block");
+                        return ERROR;
+                    }
+                    if (!isContainer(result.block().block())) {
+                        c.getSource().getEmbed()
+                                .title("Block is not a container")
+                                .primaryColor();
+                        return ERROR;
+                    }
+                    boolean added = MODULE.get(AutoSorterModule.class).addItemToSortList(itemData, result.block());
+                    c.getSource().getEmbed()
+                            .title(added ? "Item Added" : "Item Already Exists")
+                            .primaryColor()
+                            .addField("Item", itemName);
+                    return OK;
+                })))
+                .then(literal("remove").then(argument("item", item()).executes(c -> {
+                    ItemData itemData = getItem(c, "item");
+                    String itemName = itemData.name();
+                    boolean removed = MODULE.get(AutoSorterModule.class).removeItemFromSortList(itemData);
+                    c.getSource().getEmbed()
+                            .title(removed ? "Item Removed" : "Item Not Found")
+                            .primaryColor()
+                            .addField("Item", itemName);
+                    return 0;
+                })))
                 .then(literal("clear").executes(c -> {
                     PLUGIN_CONFIG.autoSortModule.sortDestinations.clear();
                     c.getSource().getEmbed()
@@ -113,7 +138,7 @@ public class AutoSorterCommand extends Command {
                     return OK;
                 }))
                 .then(literal("start").executes(c -> {
-                    MODULE.get(AutoSorterModule.class).startSorting();
+                    MODULE.get(AutoSorterModule.class).start();
                     c.getSource().getEmbed()
                             .title("Auto Sorter Started")
                             .primaryColor();
@@ -149,7 +174,8 @@ public class AutoSorterCommand extends Command {
         embed
                 .primaryColor()
                 .addField("Enabled", toggleStr(PLUGIN_CONFIG.autoSortModule.enabled))
-                .addField("Pickup Location", PLUGIN_CONFIG.autoSortModule.pickupLocation == null ? "Not Set" : "Set")
+                .addField("Pickup Chest", PLUGIN_CONFIG.autoSortModule.pickupChest == null ? "Not Set" : "Set")
+                .addField("Pickup Player Location", PLUGIN_CONFIG.autoSortModule.pickupPlayerLocation == null ? "Not Set" : "Set")
                 .addField("Sort destinations", String.valueOf(PLUGIN_CONFIG.autoSortModule.sortDestinations.size()))
                 .addField("Big Stacks First", toggleStr(PLUGIN_CONFIG.autoSortModule.bigStacksFirst))
                 .addField("Only Full Stacks", toggleStr(PLUGIN_CONFIG.autoSortModule.onlyFullStacks));
