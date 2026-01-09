@@ -67,8 +67,15 @@ public class AutoKitMaker extends Module {
     }
 
     public void startKit(Kit kit) {
-        this.currentKit = kit;
-        startTakeItemSlot(1);
+        info("Starting to make kit '" + kit.name() + "'...");
+        currentKit = kit;
+        closeOpenContainer();
+        if (PLUGIN_CONFIG.autoKitMakeModule.checkKitBeforeStart) {
+            currentState = State.WalkToPeekKit;
+            currentItemSlot = 1;
+        } else {
+            startTakeItemSlot(1);
+        }
     }
 
     public void stop() {
@@ -81,6 +88,7 @@ public class AutoKitMaker extends Module {
     public void error(String message) {
         super.error("AutoKitMaker error: " + message);
         MessageUtils.broadcastMessage(Component.text("AutoKitMaker: " + message).color(TextColors.RED));
+        MessageUtils.broadcastPingSound();
     }
 
     @Override
@@ -110,6 +118,64 @@ public class AutoKitMaker extends Module {
         switch (currentState) {
             case Idle -> {
                 // Do nothing
+            }
+            case WalkToPeekKit -> {
+                if (currentKit == null) {
+                    currentState = State.Error;
+                    error("No kit selected!");
+                    return;
+                }
+                BlockPos kitPos = PLUGIN_CONFIG.autoKitMakeModule.kitLocation;
+                if (kitPos == null || !isSaneDistance(kitPos) || !isContainerAtPos(kitPos)) {
+                    error("Kit location is not defined or not within reach or not a container!");
+                    currentState = State.Error;
+                    return;
+                }
+                pathingRequestFuture = BARITONE.rightClickBlock(kitPos.x(), kitPos.y(), kitPos.z());
+                currentState = State.PeekKit;
+            }
+            case PeekKit -> {
+                Container openContainer = CACHE.getPlayerCache().getInventoryCache().getOpenContainer();
+                if (!pathingRequestFuture.isCompleted() || openContainer.getContainerId() == 0) {
+                    return;
+                }
+                int topSlots = ContainerTypeInfoRegistry.REGISTRY.get(openContainer.getType()).topSlots();
+                List<ItemStack> containerItems = openContainer.getContents().subList(0, topSlots);
+
+                // Scan existing items in the kit and fast forward to the first missing item
+                // I know indexes don't start at 1 whatever
+                for (int i = 1; i <= 27; i++) {
+                    ItemStack itemHas = containerItems.get(i - 1);
+                    String itemWantName = currentKit.items().get(i);
+                    if (itemWantName == null) {
+                        continue;
+                    }
+                    ItemData itemWantData = ItemRegistry.REGISTRY.get(itemWantName);
+                    if (itemWantData == null) {
+                        warn("Item '" + itemWantName + "' in kit '" + currentKit.name() + "' not found in registry!");
+                        continue;
+                    }
+                    if (itemHas != null) {
+                        if (itemHas.getId() == itemWantData.id() && itemHas.getAmount() == itemWantData.stackSize()) {
+                            // Slot is correct
+                            continue;
+                        }
+                        error("Kit '" + currentKit.name() + "' has wrong item in slot " + i + "!");
+                        currentState = State.Error;
+                        return;
+                    }
+                    currentItemSlot = i;
+                    break;
+                }
+                if (currentItemSlot > 27) {
+                    currentState = State.OnKitDone;
+                    return;
+                }
+                if (currentItemSlot > 1) {
+                    info("Resuming kit '" + currentKit.name() + "' at slot " + currentItemSlot + " (some items already present)");
+                }
+                closeOpenContainer();
+                currentState = State.LookForItem;
             }
             case LookForItem -> {
                 if (currentKit == null) {
@@ -287,7 +353,7 @@ public class AutoKitMaker extends Module {
                         currentItemSlot++;
                         if (currentKit.items().get(currentItemSlot) == null && currentItemSlot < 27) {
                             continue;
-                        } else if (currentItemSlot >= 27) {
+                        } else if (currentItemSlot > 27) {
                             currentState = State.OnKitDone;
                             return;
                         }
@@ -409,6 +475,9 @@ public class AutoKitMaker extends Module {
     enum State {
         Idle,
         Error,
+        WalkToPeekKit,
+        PeekKit,
+        /** Needs `{@link AutoKitMaker#currentKit} != null` and `{@link AutoKitMaker#currentItemSlot} [1-27]` */
         LookForItem,
         WalkWaitAndTakeItem,
         TakeItemWait,

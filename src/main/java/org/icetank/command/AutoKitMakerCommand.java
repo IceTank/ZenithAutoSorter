@@ -49,6 +49,7 @@ public class AutoKitMakerCommand extends Command {
                         "kitLocation - Set the output shulker location",
                         "kitDoneButton [clear] - Set the location of the button to press when a kit is done",
                         "autoRepeat on/off - Toggle auto repeat of kit making",
+                        "checkKitBeforeStart on/off - Toggle checking the existing kit contents before starting to gather items",
                         "kit new <kit name> - Create a new kit",
                         "kit del <kit name> - Delete an existing kit",
                         "kit add <kit name> <slot> <item name> - Add an item to a kit at the specified slot",
@@ -154,6 +155,13 @@ public class AutoKitMakerCommand extends Command {
                     PLUGIN_CONFIG.autoKitMakeModule.autoRepeat = enabled;
                     c.getSource().getEmbed()
                             .title("Auto Repeat " + (enabled ? "Enabled" : "Disabled"));
+                    return OK;
+                })))
+                .then(literal("checkKitBeforeStart").then(argument("toggle", toggle()).executes(c -> {
+                    boolean enabled = getToggle(c, "toggle");
+                    PLUGIN_CONFIG.autoKitMakeModule.checkKitBeforeStart = enabled;
+                    c.getSource().getEmbed()
+                            .title("Check Kit Before Start " + (enabled ? "Enabled" : "Disabled"));
                     return OK;
                 })))
                 .then(literal("kit")

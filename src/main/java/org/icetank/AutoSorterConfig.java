@@ -29,6 +29,7 @@ public class AutoSorterConfig {
     public static class AutoKitMakerConfig {
         public boolean enabled = true;
         public boolean autoRepeat = false;
+        public boolean checkKitBeforeStart = false;
         @Nullable public BlockPos kitLocation = null;
         @Nullable public BlockPos kitDoneButton = null;
         public Map<String, Kit> kits = new HashMap<>();
